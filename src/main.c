@@ -448,7 +448,7 @@ int	input_loop(t_data *data)
 	}
 	rl_clear_history();
 	data->end = TRUE;
-	write(2, "exit\n", 5);
+	write(1, "exit\n", 5);
 	return (FAIL);
 }
 
@@ -833,7 +833,7 @@ int	do_command_arg_add(t_data *data, t_command *cur, char *arg)
 	tmp = NULL;
 	if (do_expand_arg(data, &tmp, arg))
 		return (free(tmp), set_exit(MAL_FAIL));
-	if (token_add(&(cur->args), tmp))
+	if (tmp && *tmp && token_add(&(cur->args), tmp))
 		return (free(tmp), set_exit(MAL_FAIL));
 	return (SUCCESS);
 }
@@ -986,7 +986,7 @@ int main(int ac, char **av, char **envp)
 		if (get_input(&data) && data.end)
 			break ;
 		if (!data.end && !g_exit)
-			executor(&data);
+			g_exit = executor(&data);
 		do_clean_commands(&data);
 	}
 	do_clean_data(&data);
