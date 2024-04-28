@@ -983,7 +983,7 @@ int main(int ac, char **av, char **envp)
 		do_sig(MAIN);
 		data.status = g_exit;
 		g_exit = 0;
-		if (get_input(&data) && data.end)
+		if (get_input(&data) || data.end)
 			break ;
 		if (!data.end && !g_exit)
 			g_exit = executor(&data);
