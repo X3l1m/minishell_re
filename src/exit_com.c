@@ -55,14 +55,17 @@ int	exit_com(t_data *data)
 {
 
 	ft_putendl_fd("exit", 1);
-	if (!ft_istrdigit(data->cmd->args[1])
-		|| !num_conv(data->cmd->args[1], &data->status))
+	if (data->cmd->args[1])
 	{
-		data->status = cmd_err_msg("exit", data->cmd->args[1], \
-		"numeric argument required", 2);
+		if (!ft_istrdigit(data->cmd->args[1])
+			|| !num_conv(data->cmd->args[1], &data->status))
+		{
+			data->status = cmd_err_msg("exit", data->cmd->args[1], \
+			"numeric argument required", 2);
+		}
+		else if (data->cmd->args[2])
+			return (cmd_err_msg("exit", NULL, "too many arguments", 1));
 	}
-	else if (data->cmd->args[2])
-		return (cmd_err_msg("exit", NULL, "too many arguments", 1));
 	data->end = 1;
 	return (data->status);
 }

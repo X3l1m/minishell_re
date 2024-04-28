@@ -11,7 +11,7 @@ OBJECTS := $(patsubst $(SRC_DIR)%,$(OBJ_DIR)%,$(SOURCES:.c=.o))
 
 CC := cc
 IFLAGS := -I$(INC_DIR) -I$(LIBFT_DIR)
-CFLAGS := -Wall -Wextra -Werror
+CFLAGS := -g -Wall -Wextra -Werror
 LFLAGS := -L$(LIBFT_DIR) -lft -lreadline -lhistory
 
 GREEN=\033[32m

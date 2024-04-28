@@ -8,8 +8,8 @@
 		"args": [],
 		"stopAtEntry": false,
 		"externalConsole": false,
-		"cwd": "/home/linux/mini",
-		"program": "/home/linux/mini/a.out",
+		"cwd": "/home/linux/minishell_re",
+		"program": "/home/linux/minishell_re/minishell",
 		"MIMode": "gdb",
 		"miDebuggerPath": "gdb",
 		"setupCommands": [
