@@ -22,32 +22,31 @@ int	get_array_size(char **arr)
 
 	if (!arr)
 		return (0);
-	i = -1;
-	while (arr[++i])
-		;
+	i = 0;
+	while (arr[i])
+		i++;
 	return (i);
 }
 
-int	token_add(char ***args, char *new, int size)
+int	token_add(char ***args, char *new)
 {
 	char	**local;
 	int		i;
+	int		size;
 
-	local = ft_calloc(sizeof(char*), (size + 1));
+	if (!args)
+		return (set_exit(LOGIC_ERROR));
+	size = get_array_size(*args);
+    local = ft_calloc(sizeof(char*), size + 2);
 	if (!local)
 		return (set_exit(MAL_FAIL));
-	i = 0;
-	if (*args)
-	{
-		while ((*args)[i])
-		{
-			local[i] = (*args)[i];
-			i++;
-		}
-	}
+	i = -1;
+	while (++i < size)
+		local[i] = (*args)[i];
 	local[i] = new;
-	local[size] = '\0';
-	free(*args);
+	local[i + 1] = NULL;
+	if (*args)
+		free(*args);
 	*args = local;
 	return(SUCCESS);
 }
@@ -103,7 +102,7 @@ char	*ft_strndup(char const *s1, int n)
 
 	if (!s1)
 		return (NULL);
-	rtn = malloc(n + 1);
+	rtn = ft_calloc(1, n + 1);
 	if (!rtn)
 		return (NULL);
 	rtn = ft_memcpy(rtn, s1, n);
@@ -179,6 +178,9 @@ int	env_lst_add(char *s, t_data *data)
 	tmp = ft_calloc(1, sizeof(t_env));
 	if (!tmp)
 		return (set_exit(MAL_FAIL));
+	tmp->next = NULL;
+	tmp->value = NULL;
+	tmp->variable= NULL;
 	if (data->env)
 		env_lst_last(data->env)->next = tmp;
 	else
@@ -204,17 +206,18 @@ t_env	*env_find(char *name, t_env *head)
 	return (NULL);
 }
 
-int	envp_to_env(char **env, t_data *data)
+int	envp_to_env(char **envp, t_data *data)
 {
 	int		i;
 
-	if (!env)
+	if (!envp)
 		return (SUCCESS);
-	i = -1;
-	while (env[++i])
+	i = 0;
+	while (envp[i])
 	{
-		if (env_lst_add(env[i], data))
+		if (env_lst_add(envp[i], data))
 			return (MAL_FAIL);
+		i++;
 	}
 	return (SUCCESS);
 }
@@ -229,15 +232,13 @@ int	env_shlvl_update(t_data *data)
 	{
 		if (env_lst_add("SHLVL=1", data))
 			return (MAL_FAIL);
+		return (SUCCESS);
 	}
-	else
-	{
-		val = ft_atoi(tmp->value);
-		free(tmp->value);
-		tmp->value = ft_itoa(val);
-		if (!(tmp->value))
-			return (set_exit(MAL_FAIL));
-	}
+	val = ft_atoi(tmp->value);
+	free(tmp->value);
+	tmp->value = ft_itoa(val);
+	if (!(tmp->value))
+		return (set_exit(MAL_FAIL));
 	return (SUCCESS);
 }
 
@@ -297,7 +298,7 @@ int	env_size(t_env *env)
 	return (size);
 }
 
-int	envp_assign(t_data *data, t_env *current, int i)
+int	envp_assign(t_data *data, t_env *current)
 {
 	char	*tmp;
 
@@ -313,7 +314,7 @@ int	envp_assign(t_data *data, t_env *current, int i)
 	}
 	if (!tmp)
 		return (set_exit(MAL_FAIL));
-	if (token_add(&(data->envp), tmp, i))
+	if (token_add(&(data->envp), tmp))
 		return (set_exit(MAL_FAIL));
 	return (SUCCESS);
 }
@@ -327,7 +328,7 @@ void	do_clean_envp(t_data *data)
 	i = 0;
 	while (data->envp[i])
 		free(data->envp[i++]);
-	free(data->envp[i]);
+	free(data->envp);
 	data->envp = NULL;
 }
 
@@ -347,7 +348,6 @@ void	do_clean_env(t_data *data)
 		tmp = data->env;
 	}
 	data->env = NULL;
-
 }
 
 void	do_clean_args(char **args)
@@ -359,7 +359,7 @@ void	do_clean_args(char **args)
 	i = 0;
 	while (args[i])
 		free(args[i++]);
-	free(args[i]);
+	free(args);
 }
 
 void	do_clean_files(t_file *file)
@@ -422,7 +422,7 @@ int	env_to_envp(t_data *data)
 	while (tmp)
 	{
 		i++;
-		if (envp_assign(data, tmp, i))
+		if (envp_assign(data, tmp))
 			return (set_exit(MAL_FAIL));
 		tmp = tmp->next;
 	}
@@ -462,7 +462,10 @@ void	token_cut_helper(t_data *data, int *i, int *needle, char **token)
 	else
 	{
 		(*needle)--;
-		*token = ft_strndup(&(data->line[*i]), 1);
+		if (&(data->line[*i]))
+			*token = ft_strndup(&(data->line[*i]), 1);
+		else
+			*token = ft_strdup(&(data->line[*i]));
 	}
 	*i = *needle;
 }
@@ -540,7 +543,7 @@ int	do_heredoc_child(t_data *data, t_file *file)
 {
 	char	*line;
 
-	// sig heredoc
+	do_sig(CHILD);
 	if (file->fd < 0)
 		return (errno);
 	while (1)
@@ -565,7 +568,7 @@ int	do_heredoc(t_data *data, t_file *file)
 {
 	pid_t	pid;
 
-	// sig ignore
+	do_sig(PARENT);
 	file->fd = open(file->name, O_WRONLY | O_TRUNC | O_CREAT, 0644);
 	pid = fork();
 	if (pid == -1)
@@ -578,8 +581,8 @@ int	do_heredoc(t_data *data, t_file *file)
 		g_exit = WEXITSTATUS(g_exit);
 	else if (WIFSIGNALED(g_exit))
 		g_exit = WTERMSIG(g_exit);
+	do_sig(MAIN);
 	return (g_exit);
-	// sig main
 }
 
 int	do_type_assign(t_file *file, char *type)
@@ -830,8 +833,8 @@ int	do_command_arg_add(t_data *data, t_command *cur, char *arg)
 	tmp = NULL;
 	if (do_expand_arg(data, &tmp, arg))
 		return (free(tmp), set_exit(MAL_FAIL));
-	if (token_add(&(cur->args), tmp, get_array_size(cur->args) + 1))
-		return (set_exit(MAL_FAIL));
+	if (token_add(&(cur->args), tmp))
+		return (free(tmp), set_exit(MAL_FAIL));
 	return (SUCCESS);
 }
 
@@ -928,12 +931,12 @@ int	input_process(t_data *data)
 {
 	char	**tokens;
 	char	*token;
-	int		size;
 	int		needle;
 	int		i;
 
+	if (!data->line)
+		return (SUCCESS);
 	i = 0;
-	size = 0;
 	tokens = NULL;
 	needle = 0;
 	while(data->line[i])
@@ -941,17 +944,18 @@ int	input_process(t_data *data)
 		token = tokenizer(data, &i, &needle);
 		if (!token)
 			return (do_clean_args(tokens), set_exit(MAL_FAIL));
-		if (token_add(&tokens, token, ++size))
-			return (do_clean_args(tokens), g_exit);
+		if (token_add(&tokens, token))
+			return (do_clean_args(tokens), free(token), g_exit);
 	}
 	if (input_parse(data, tokens))
 		return (do_clean_args(tokens), g_exit);
+	do_clean_args(tokens);
 	return (SUCCESS);
 }
 
 int get_input(t_data *data)
 {
-	if (input_loop(data))
+	if (input_loop(data) || data->end)
 		return (g_exit);
 	add_history(data->line);
 	if (input_process(data))
@@ -976,9 +980,9 @@ int main(int ac, char **av, char **envp)
 		return (do_clean_data(&data), g_exit);
 	while (!data.end)
 	{
+		do_sig(MAIN);
 		data.status = g_exit;
 		g_exit = 0;
-		//signal main handling
 		if (get_input(&data) && data.end)
 			break ;
 		if (!data.end && g_exit != 130)

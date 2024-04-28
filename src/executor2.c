@@ -100,9 +100,9 @@ int	executor(t_data *data)
 
 	tmp = data->cmd;
 	old_in = -1;
-	do_sig(PARENT);
 	if (!data->cmd->next)
 		return (single_exec(data));
+	do_sig(PARENT);
 	while (tmp)
 	{
 		if (pipe(pip) == -1)
