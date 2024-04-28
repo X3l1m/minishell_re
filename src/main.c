@@ -845,7 +845,7 @@ int	do_command_arg_add(t_data *data, t_command *cur, char *arg)
 	tmp = NULL;
 	if (do_expand_arg(data, &tmp, arg))
 		return (free(tmp), set_exit(MAL_FAIL));
-	if (!*tmp)
+	if (tmp && !*tmp)
 	{
 		free(tmp);
 		tmp = NULL;
