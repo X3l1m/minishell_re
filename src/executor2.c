@@ -29,6 +29,8 @@ void	child(t_data *data, t_command *cmd, int old_in, pid_t *pip)
 	if (cmd->files)
 		if (setio(cmd->files))
 			exit(127);
+	if (!data->cmd || (!data->cmd->args && !data->cmd->files))
+		exit(SUCCESS);
 	b = builtin_com(cmd);
 	if (b != -1)
 		exit(b);
@@ -68,6 +70,8 @@ int	single_exec(t_data *data)
 	int	o_stdin;
 	int	o_stdout;
 
+	if (!data->cmd || (!data->cmd->args && !data->cmd->files))
+		return (SUCCESS);
 	if (data->cmd->files)
 	{
 		o_stdin = dup(STDIN_FILENO);

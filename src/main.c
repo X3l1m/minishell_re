@@ -131,6 +131,8 @@ void	init_data(t_data *data)
 	data->line = NULL;
 	data->envp = NULL;
 	data->env = NULL;
+	data->status = 0;
+	g_exit = 0;
 }
 
 t_env	*env_lst_last(t_env *node)
@@ -151,11 +153,14 @@ int	env_assign_var(char *s, t_env *new)
 
 	if (!new)
 		return (set_exit(MAL_FAIL));
+	free(new->variable);
+	free(new->value);
 	i = 0;
 	while (s[i] && s[i] != '=')
 		i++;
 	if (!s[i])
 	{
+		new->value = NULL;
 		new->variable = ft_strdup(s);
 		if (!new->variable)
 			return (set_exit(MAL_FAIL));
@@ -175,6 +180,8 @@ int	env_lst_add(char *s, t_data *data)
 {
 	t_env	*tmp;
 
+	if (env_find(s, data->env))
+		return (env_assign_var(s, env_find(s, data->env)));
 	tmp = ft_calloc(1, sizeof(t_env));
 	if (!tmp)
 		return (set_exit(MAL_FAIL));
@@ -642,11 +649,11 @@ int	do_add_file(t_command *cur, char **tokens, int i)
 	return (SUCCESS);
 }
 
-int	do_command_jump(t_data *data, t_command **cur)
+int	do_command_jump(t_data *data, t_command **cur, char *next)
 {
 	if (!cur || !*cur)
 		return (set_exit(MAL_FAIL));
-	if (!((*cur)->args) && !((*cur)->files))
+	if (!next)
 		return (give_err("syntax error near unexpected token", "|"), set_exit(PARS_FAIL));
 	(*cur)->next = ft_calloc(1, sizeof(t_command));
 	if (!((*cur)->next))
@@ -833,7 +840,12 @@ int	do_command_arg_add(t_data *data, t_command *cur, char *arg)
 	tmp = NULL;
 	if (do_expand_arg(data, &tmp, arg))
 		return (free(tmp), set_exit(MAL_FAIL));
-	if (tmp && *tmp && token_add(&(cur->args), tmp))
+	if (!*tmp)
+	{
+		free(tmp);
+		tmp = NULL;
+	}
+	if (tmp && token_add(&(cur->args), tmp))
 		return (free(tmp), set_exit(MAL_FAIL));
 	return (SUCCESS);
 }
@@ -855,7 +867,7 @@ int	do_command_split(t_data *data, char **tokens)
 		}
 		else if (!ft_strcmp(tokens[i], "|"))
 		{
-			if (do_command_jump(data, &cur))
+			if (do_command_jump(data, &cur, tokens[i + 1]))
 				return (g_exit);
 		}
 		else if (do_command_arg_add(data, cur, tokens[i]))
@@ -909,8 +921,6 @@ int	do_heredoc_read(t_data *data)
 
 int	input_parse(t_data *data, char **tokens)
 {
-	t_command	*tmp;
-
 	if (!tokens)
 		return (SUCCESS);
 	data->cmd = ft_calloc(1, sizeof(t_command));
@@ -919,9 +929,6 @@ int	input_parse(t_data *data, char **tokens)
 	data->cmd->_data = data;
 	if (do_command_split(data, tokens))
 		return (g_exit);
-	tmp = get_command_last(data->cmd);
-	if (!(tmp->args) && !(tmp->files))
-		return (give_err("syntax error near unexpected token", tokens[get_array_size(tokens)]), g_exit);
 	if (do_heredoc_read(data))
 		return (g_exit);
 	return (SUCCESS);

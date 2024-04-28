@@ -26,7 +26,7 @@
 #define PARS_DELIMS "<>| "
 #define TRUE 1
 #define FALSE 0
-#define LOGIC_ERROR 1234
+#define LOGIC_ERROR 245
 # define IGNORE 5
 # define HEREDOC 4
 # define PARENT 3
