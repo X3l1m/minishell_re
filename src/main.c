@@ -739,8 +739,9 @@ int	do_expand_status(t_data *data, char **old, int *index)
 	value = ft_itoa(data->status);
 	if (!value)
 		return (set_exit(MAL_FAIL));
-	if (str_join_or_dup(old, value, 3))
-		return (set_exit(MAL_FAIL));
+	if (str_join_or_dup(old, value, 1))
+		return (free(value), set_exit(MAL_FAIL));
+	free(value);
 	return (SUCCESS);
 }
 
