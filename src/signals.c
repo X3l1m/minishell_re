@@ -11,10 +11,12 @@
 /* ************************************************************************** */
 
 #include <minishell.h>
+#include <termios.h>
+#include <unistd.h>
 
 extern int g_exit;
 
-// void	init_shell_envioment(void)
+// static void	init_shell(void)
 // {
 // 	struct termios	attributes;
 
@@ -23,46 +25,43 @@ extern int g_exit;
 // 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &attributes);
 // }
 
+
 static void	do_sig_c(int mode)
 {
-	(void)mode;
-	write(1, "\n", 1);
-	g_exit = 130;
-	rl_on_new_line();
-	rl_replace_line("", 0);
-	rl_redisplay();
+	if (mode == SIGINT)
+	{
+		ft_printf("\n");
+		rl_on_new_line();
+		rl_replace_line("", 0);
+		rl_redisplay();
+		g_exit = 130;
+	}
 }
 
-// static void	do_sig_heredoc(int mode)
-// {
-// 	(void)mode;
-// 	printf("> %s\n", rl_line_buffer);
-// 	rl_replace_line("", 0);
-// 	rl_on_new_line();
-// 	exit(130);
-// }
+static void	do_sig_heredoc(int mode)
+{
+	if (mode == SIGINT)
+	{
+		g_exit = 1;
+		printf("> %s\n", rl_line_buffer);
+		rl_replace_line("", 0);
+		rl_on_new_line();
+		exit(g_exit);
+	}
+}
 
 void do_sig(int mode)
 {
+	signal(SIGQUIT, SIG_IGN);
 	if (mode == MAIN)
-	{
-		// init_shell_envioment();
 		signal(SIGINT, do_sig_c);
-		signal(SIGQUIT, SIG_IGN);
-	}
 	else if (mode == PARENT || mode == IGNORE)
-	{
 		signal(SIGINT, SIG_IGN);
-		signal(SIGQUIT, SIG_IGN);
-	}
 	else if (mode == CHILD)
-	{
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-	}
+		signal(SIGINT, do_sig_heredoc);
 	else if (mode == HEREDOC)
 	{
 		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_IGN);
+		signal(SIGQUIT, SIG_DFL);
 	}
 }

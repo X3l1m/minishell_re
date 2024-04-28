@@ -55,7 +55,6 @@ int	fork_run(t_command *cmd, t_env *env)
 {
 	pid_t	pid;
 
-	do_sig(PARENT);
 	pid = fork();
 	if (pid == -1)
 		return (FAIL);
@@ -106,7 +105,6 @@ int	executor(t_data *data)
 	old_in = -1;
 	if (!data->cmd->next)
 		return (single_exec(data));
-	do_sig(PARENT);
 	while (tmp)
 	{
 		if (pipe(pip) == -1)

@@ -440,6 +440,7 @@ int	input_loop(t_data *data)
 {
 	int	i;
 
+	do_sig(MAIN);
 	while (1)
 	{
 		rl_on_new_line();
@@ -453,6 +454,7 @@ int	input_loop(t_data *data)
 			return (SUCCESS);
 		free(data->line);
 	}
+	do_sig(IGNORE);
 	rl_clear_history();
 	data->end = TRUE;
 	write(1, "exit\n", 5);
@@ -550,7 +552,6 @@ int	do_heredoc_child(t_data *data, t_file *file)
 {
 	char	*line;
 
-	do_sig(HEREDOC);
 	if (file->fd < 0)
 		return (errno);
 	while (1)
@@ -578,20 +579,21 @@ int	do_heredoc(t_data *data, t_file *file)
 {
 	pid_t	pid;
 
-	do_sig(IGNORE);
 	file->fd = open(file->name, O_WRONLY | O_TRUNC | O_CREAT, 0644);
 	pid = fork();
 	if (pid == -1)
 		return (set_exit(FORK_FAIL));
 	if (pid == 0)
+	{
+		do_sig(HEREDOC);
 		exit(do_heredoc_child(data, file));
+	}
 	file->fd = close(file->fd);
 	waitpid(pid, &g_exit, 0);
 	if (WIFEXITED(g_exit))
 		g_exit = WEXITSTATUS(g_exit);
 	else if (WIFSIGNALED(g_exit))
 		g_exit = WTERMSIG(g_exit);
-	do_sig(MAIN);
 	return (g_exit);
 }
 
@@ -990,7 +992,6 @@ int main(int ac, char **av, char **envp)
 		return (do_clean_data(&data), g_exit);
 	while (!data.end)
 	{
-		do_sig(MAIN);
 		data.status = g_exit;
 		g_exit = 0;
 		if (get_input(&data) || data.end)
