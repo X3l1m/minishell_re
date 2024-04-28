@@ -105,6 +105,7 @@ int	executor(t_data *data)
 	old_in = -1;
 	if (!data->cmd->next)
 		return (single_exec(data));
+	do_sig(PARENT);
 	while (tmp)
 	{
 		if (pipe(pip) == -1)

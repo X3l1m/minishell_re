@@ -16,52 +16,38 @@
 
 extern int g_exit;
 
-// static void	init_shell(void)
-// {
-// 	struct termios	attributes;
-
-// 	tcgetattr(STDIN_FILENO, &attributes);
-// 	attributes.c_lflag &= ~(ECHOCTL);
-// 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &attributes);
-// }
-
-
 static void	do_sig_c(int mode)
 {
 	if (mode == SIGINT)
 	{
+		g_exit = 130;
 		ft_printf("\n");
 		rl_on_new_line();
 		rl_replace_line("", 0);
 		rl_redisplay();
-		g_exit = 130;
-	}
-}
-
-static void	do_sig_heredoc(int mode)
-{
-	if (mode == SIGINT)
-	{
-		g_exit = 1;
-		printf("> %s\n", rl_line_buffer);
-		rl_replace_line("", 0);
-		rl_on_new_line();
-		exit(g_exit);
 	}
 }
 
 void do_sig(int mode)
 {
-	signal(SIGQUIT, SIG_IGN);
 	if (mode == MAIN)
+	{
 		signal(SIGINT, do_sig_c);
+		signal(SIGQUIT, SIG_IGN);
+	}
 	else if (mode == PARENT || mode == IGNORE)
+	{
+		signal(SIGQUIT, SIG_IGN);
 		signal(SIGINT, SIG_IGN);
+	}
 	else if (mode == CHILD)
+	{
 		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
+	}
 	else if (mode == HEREDOC)
 	{
-		signal(SIGINT, do_sig_heredoc);
-		signal(SIGQUIT, SIG_DFL);
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_IGN);
 	}
 }
