@@ -116,10 +116,10 @@ void	give_err(char *text, char *point)
 	write(2, "-minishell: ", 12);
 	write(2, text, ft_strlen(text));
 	write(2, "`", 1);
-	if (ft_strcmp(point, "\n"))
-		write(2, point, ft_strlen(point));
-	else
+	if (!point || !*point || ft_strcmp(point, "\n"))
 		write(2, "newline", 7);
+	else
+		write(2, point, ft_strlen(point));
 	write(2, "'\n", 2);
 }
 
@@ -985,7 +985,7 @@ int main(int ac, char **av, char **envp)
 		g_exit = 0;
 		if (get_input(&data) && data.end)
 			break ;
-		if (!data.end && g_exit != 130)
+		if (!data.end && !g_exit)
 			executor(&data);
 		do_clean_commands(&data);
 	}
