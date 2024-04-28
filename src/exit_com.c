@@ -62,7 +62,10 @@ int	exit_com(t_data *data)
 		"numeric argument required", 2);
 	}
 	else if (data->cmd->args[2])
-		return (cmd_err_msg("exit", NULL, "too many arguments", 1));
+	{
+		data->status = cmd_err_msg("exit", NULL, "too many arguments", 1);
+		return (data->status);
+	}
 	data->end = 1;
 	return (data->status);
 }
