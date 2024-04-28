@@ -116,7 +116,7 @@ void	give_err(char *text, char *point)
 	write(2, "-minishell: ", 12);
 	write(2, text, ft_strlen(text));
 	write(2, "`", 1);
-	if (!point || !*point || ft_strcmp(point, "\n"))
+	if (!point || !*point || !ft_strcmp(point, "\n"))
 		write(2, "newline", 7);
 	else
 		write(2, point, ft_strlen(point));
@@ -550,7 +550,7 @@ int	do_heredoc_child(t_data *data, t_file *file)
 {
 	char	*line;
 
-	do_sig(CHILD);
+	do_sig(HEREDOC);
 	if (file->fd < 0)
 		return (errno);
 	while (1)
@@ -558,7 +558,10 @@ int	do_heredoc_child(t_data *data, t_file *file)
 		rl_on_new_line();
 		line = readline("> ");
 		if (!line)
-			break ; // Error message for EOF and break
+		{
+			give_err("here-document delimited by end-of-file ", file->delim);
+			break ;
+		}
 		if (do_heredoc_expand_arg(data, &line))
 			return (free(line), g_exit);
 		if (!ft_strcmp(line, file->delim))
@@ -575,7 +578,7 @@ int	do_heredoc(t_data *data, t_file *file)
 {
 	pid_t	pid;
 
-	do_sig(PARENT);
+	do_sig(IGNORE);
 	file->fd = open(file->name, O_WRONLY | O_TRUNC | O_CREAT, 0644);
 	pid = fork();
 	if (pid == -1)
