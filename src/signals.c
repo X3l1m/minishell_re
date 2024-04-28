@@ -18,14 +18,12 @@ extern int g_exit;
 
 static void	do_sig_c(int mode)
 {
-	if (mode == SIGINT)
-	{
-		g_exit = 130;
-		ft_printf("\n");
-		rl_on_new_line();
-		rl_replace_line("", 0);
-		rl_redisplay();
-	}
+	(void)mode;
+	g_exit = 130;
+	write (1, "\n", 1);
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_redisplay();
 }
 
 void do_sig(int mode)

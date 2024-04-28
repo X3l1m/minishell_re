@@ -967,8 +967,13 @@ int	input_process(t_data *data)
 
 int get_input(t_data *data)
 {
-	if (input_loop(data) || data->end)
+	if (input_loop(data))
 		return (g_exit);
+	if (g_exit)
+	{
+		data->status = g_exit;
+		g_exit = 0;
+	}
 	add_history(data->line);
 	do_sig(IGNORE);
 	if (input_process(data))
