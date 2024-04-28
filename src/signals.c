@@ -58,10 +58,10 @@ void do_sig(int mode)
 	else if (mode == PARENT || mode == IGNORE)
 		signal(SIGINT, SIG_IGN);
 	else if (mode == CHILD)
-		signal(SIGINT, do_sig_heredoc);
+		signal(SIGINT, SIG_DFL);
 	else if (mode == HEREDOC)
 	{
-		signal(SIGINT, SIG_DFL);
+		signal(SIGINT, do_sig_heredoc);
 		signal(SIGQUIT, SIG_DFL);
 	}
 }
