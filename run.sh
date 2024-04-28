@@ -1,0 +1,1 @@
+gcc -g src/main.c libft/libft.a -I includes -lreadline -lhistory
